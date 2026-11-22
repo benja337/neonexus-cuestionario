@@ -341,7 +341,6 @@ function reveal(list){
   const flagged=list.map((r,k)=>[PEOPLE.find(p=>p.id===r.persona).n,integ[k]]).filter(([,g])=>g.nivel==='mal'||g.nivel==='medio');
   if(flagged.length)add('','Atención a cómo se respondió',flagged.map(([n,g])=>n+': '+g.titulo).join(' · ')+'. Revisen esos resultados con cuidado antes de sacar conclusiones.');
   else add('good','Los 4 respondieron pensando','Nadie respondió al azar ni más rápido de lo que toma leer. Los resultados reflejan el criterio real del equipo.');
-  if(list.some(r=>r.persona==='benjamin'))add('mid','Nota sobre Benjamín','Benjamín participó en preparar las situaciones, así que conocía el material antes de responder. Su resultado se muestra para que vean sus respuestas, pero no se compara con el de los demás.');
   const res=$('res');res.replaceChildren();
   list.forEach((r,k)=>{const per=PEOPLE.find(p=>p.id===r.persona);const p=pct(ans[k]);
     const card=document.createElement('details');card.className='person';card.open=true;
