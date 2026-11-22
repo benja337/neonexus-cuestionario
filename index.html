@@ -13,6 +13,10 @@ html,body{margin:0}
 .conf-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .conf-btns .btn{text-align:center}
 .opt.picked{border-color:var(--accent);background:#2a1d15}
+.ev{display:flex;flex-direction:column;gap:4px;margin-top:8px;padding:10px 12px;border-left:3px solid var(--accent);background:var(--panel2);border-radius:6px;font-size:.9rem}
+.ev .ev-h{font-weight:700}
+.ev .ev-p{font-weight:600}
+.ev .ev-f{opacity:.7;font-size:.82rem}
 
 /* Layout: una sola columna tipo pantalla de juego (máx. 720px): cabecera con avance, tarjeta de mensaje, alternativas, retroalimentación; resultados al final */
 :root{
@@ -137,7 +141,7 @@ details.person summary::-webkit-details-marker{display:none}
     <span class="eyebrow">Los 4 terminaron</span>
     <h2>Resultados del equipo</h2>
     <div class="tf good"><b>Cómo leer esto</b><span>Un error aquí no significa que vayamos a fracasar: significa que encontramos una debilidad a tiempo, cuando todavía cuesta cero. Lo peligroso sería acertar todo, porque no aprenderíamos nada. Cada error de abajo es algo concreto que tenemos que mejorar como equipo.</span></div>
-    <div class="tf good"><b>De dónde salen estas situaciones</b><span>No son inventadas. Salen de los informes que hicimos los 4: el Documento 0, la dimensión técnica, los requisitos para publicar en Google Play y App Store, el análisis de mercado, el modelo de precios y la proyección de sueldos. Ahí aparecieron nuestras carencias en plata, contratos, socios y toma de decisiones, y se cruzaron con los errores que más cometen las empresas nuevas.</span></div>
+    <div class="tf good"><b>De dónde salen estas situaciones</b><span>No son inventadas. Salen de los informes que hicimos los 4: el Documento 0, la dimensión técnica, los requisitos para publicar en Google Play y App Store, el análisis de mercado, el modelo de precios y la proyección de sueldos. Ahí aparecieron nuestras carencias en plata, contratos, socios y toma de decisiones, y se cruzaron con los errores que más cometen las empresas nuevas. Cada error de abajo trae un caso real: qué empresa lo vivió, cuándo, qué decidió, qué le pasó y la fuente donde se puede comprobar.</span></div>
     <h3 class="sub">El equipo completo</h3>
     <div class="team-find" id="teamfind"></div>
     <h3 class="sub">Cada socio</h3>
@@ -252,6 +256,91 @@ const Q=[
   why:'Contra un grande no se compite en precio, sino en foco.'}
 ];
 const TRAMPA=[["prudente", null, "generosa", "culpa"], ["evita", null, "atajo", "prudente"], ["prudente", null, "generosa", "culpa"], ["evita", null, "generosa", "atajo"], ["generosa", null, "firme", "evita"], ["evita", null, "firme", "prudente"], ["atajo", null, "atajo", "evita"], ["generosa", null, "generosa", "firme"], ["generosa", null, "generosa", "firme"], ["generosa", null, "firme", "atajo"], ["evita", null, "culpa", "evita"], ["evita", null, "firme", "atajo"], ["atajo", null, "atajo", "firme"], ["evita", null, "prudente", "prudente"], ["evita", null, "firme", "generosa"], ["generosa", null, "atajo", "atajo"]];
+
+// Casos reales por situación: lugar/año, qué decidieron, qué les pasó, por qué importa, fuente
+const EV=[
+ {l:'Facebook y Google · EE.UU., 2013–2015',
+  d:'Pagaron facturas de un falso proveedor que se hacía pasar por Quanta, un fabricante real, a las cuentas que el estafador les indicó por correo.',
+  r:'Entre las dos perdieron US$122 millones. Gran parte se recuperó porque los bancos congelaron cuentas a tiempo. El estafador, Evaldas Rimasauskas, fue condenado a 5 años en 2019. Según el FBI, este fraude costó US$2.770 millones solo en EE.UU. en 2024, y las posibilidades de recuperar la plata caen fuerte pasadas las primeras 72 horas.',
+  p:'Lo que salvó plata fue la velocidad con el banco, no la investigación interna.',
+  f:'Departamento de Justicia de EE.UU. (2019); FBI IC3, Informe de Delitos en Internet 2024'},
+ {l:'Nikola · EE.UU., 2016–2023',
+  d:'Publicó un video de su camión eléctrico andando en carretera. En realidad lo habían soltado cuesta abajo, sin motor funcionando.',
+  r:'Lo admitió en 2020, después de un informe público que lo expuso. El fundador, Trevor Milton, renunció, fue declarado culpable de fraude en 2022 y condenado a 4 años en 2023. Los inversionistas perdieron más de US$660 millones. Caso contrario: en 2019, en Los Ángeles, el vidrio "irrompible" del Cybertruck de Tesla se rompió en vivo frente al público; siguieron con la presentación, lo reconocieron en el escenario y en 3 días tenían 200 mil reservas.',
+  p:'Una demo que falla se olvida. Una demo falsa se descubre y se vuelve el caso.',
+  f:'Fiscalía de EE.UU., Distrito Sur de Nueva York (2023); Fortune (2019)'},
+ {l:'Correos del Reino Unido (Post Office) · 1999–2019',
+  d:'Su sistema Horizon mostraba faltantes de plata que no existían. La empresa negó que el sistema fallara y culpó a los encargados de sucursal que cargaban los datos.',
+  r:'Más de 900 encargados fueron procesados y 236 fueron a la cárcel. En 2019 un tribunal confirmó que el sistema tenía errores. Las compensaciones superan las £1.000 millones. Otro caso: en 2020, el algoritmo oficial de notas de Inglaterra (Ofqual) bajó el 39% de las calificaciones; primero lo defendieron, a los 4 días tuvieron que revertirlo y la jefa del organismo renunció.',
+  p:'Negar un error de software y culpar a quien cargó los datos convierte un bug en un escándalo.',
+  f:'Gobierno del Reino Unido (gov.uk); Computer Weekly; The Week (2020)'},
+ {l:'Estudio de Harvard · casi 4.000 empresas nuevas',
+  d:'Noam Wasserman siguió a miles de equipos fundadores durante más de 10 años para ver por qué se rompen.',
+  r:'Cerca de dos tercios de los fracasos tempranos vienen de problemas entre personas, no del producto. La salida de un socio en mal momento, sin reglas acordadas, es uno de los más comunes.',
+  p:'La crisis inmediata (la entrega) y el problema de fondo (la salida) se manejan por separado.',
+  f:'Noam Wasserman, The Founder\'s Dilemmas (Princeton University Press, 2012)'},
+ {l:'Snapchat · EE.UU., 2011–2014',
+  d:'Tres amigos crearon la app sin firmar nada sobre quién era dueño de qué ni cómo se ganaba esa propiedad.',
+  r:'En 2011 sacaron a uno de ellos, Reggie Brown. En 2013 demandó diciendo que la idea era suya. En 2014 la empresa le pagó US$157,5 millones para cerrar el caso. Wasserman encontró que el 73% de los equipos reparte la propiedad en el primer mes, casi siempre en partes fijas y sin condiciones.',
+  p:'Lo que no se escribe al principio se decide en tribunales, cuando la empresa ya vale plata.',
+  f:'TechCrunch (2014); prospecto de salida a bolsa de Snap (2017); Wasserman (2012)'},
+ {l:'TransPerfect · EE.UU., 2008–2018',
+  d:'Dos cofundadores con 50% cada uno (Elizabeth Elting y Philip Shawe), sin ninguna regla para desempatar.',
+  r:'Se pelearon y la empresa quedó bloqueada: ninguno podía decidir sin el otro. En 2015 un tribunal de Delaware ordenó vender la empresa a través de un administrador externo. Después de años de juicio, en 2018 uno le compró su parte al otro.',
+  p:'Con socios iguales, el empate va a llegar. Si no hay regla, la regla la pone un juez.',
+  f:'Corte de Cancillería de Delaware (2015); Corte Suprema de Delaware (2017)'},
+ {l:'Ópera de Sídney · Australia, 1957–1973',
+  d:'Se estimó que estaría lista en 1963 y que costaría A$7 millones.',
+  r:'Se terminó en 1973, 10 años tarde, y costó A$102 millones: 14 veces lo estimado. Kahneman y Tversky llamaron a este error "falacia de planificación": la gente estima según el mejor escenario, aunque sepa que los proyectos parecidos se atrasaron.',
+  p:'Quien hace el trabajo no es mejor estimando plazos; suele ser el más optimista.',
+  f:'Bent Flyvbjerg, Universidad de Oxford; Kahneman y Tversky (1979)'},
+ {l:'Tecnología educativa · EE.UU., 2014–2016',
+  d:'Cientos de empresas aceptaron pilotos largos y gratuitos con colegios y universidades.',
+  r:'El fenómeno tiene nombre: "purgatorio de los pilotos". Los pilotos salían bien, pero casi nunca terminaban en compra. Un estudio de 2015 encontró que las instituciones rara vez fijaban de antemano qué contaba como éxito, y que los pilotos terminaban después de que el presupuesto del año ya estaba asignado.',
+  p:'Un piloto sin precio ni criterio de éxito por escrito no lleva a una venta.',
+  f:'e-Literate (2014); Education Week (2015)'},
+ {l:'Startups de software · testimonios de fundadores',
+  d:'Una startup movió a sus programadores del producto a hacer una versión a la medida para su cliente más grande.',
+  r:'El producto principal se detuvo y la empresa terminó trabajando para un solo cliente. El fundador lo resumió así: "un cliente grande te convierte en consultora, no en startup". Jason Lemkin (SaaStr) propone una regla: hacer algo a la medida solo si ya estaba en los planes de los próximos 2 años y el contrato es de al menos un año. Son relatos de fundadores, no una estadística.',
+  p:'Lo que sirve a un solo cliente se cobra aparte o no se hace.',
+  f:'Sam McAfee, "One Big Customer Makes You a Consultant" (2017); SaaStr'},
+ {l:'Carillion · Reino Unido, 2018',
+  d:'La constructora pagaba a sus proveedores a 120 días. Miles de empresas chicas aceptaron porque era un cliente grande.',
+  r:'Carillion quebró en enero de 2018 y dejó a cerca de 30.000 proveedores con unas £1.200 millones sin pagar. Muchas pymes cerraron. En Chile, la Ley 21.131 (2019) se hizo porque el 63% de los pagos entre privados llegaba después de 30 días. Según CB Insights, quedarse sin caja aparece en el 38% de los cierres de startups.',
+  p:'Un contrato firmado no es plata en la cuenta.',
+  f:'Parlamento del Reino Unido (2018); Biblioteca del Congreso Nacional de Chile; CB Insights'},
+ {l:'Estudio mundial de fraudes · ACFE 2024',
+  d:'La asociación de examinadores de fraude analizó casos reales en empresas de todo el mundo.',
+  r:'En el 32% de los fraudes la causa principal fue que no había controles. En empresas de menos de 100 personas, la pérdida típica fue de US$141.000. Los fraudes chicos que nadie revisa son los que crecen.',
+  p:'Un descuadre sin explicar no se tapa ni se acusa: se revisa y se cambia el control.',
+  f:'ACFE, Report to the Nations (2024)'},
+ {l:'WeWork · EE.UU., 2019',
+  d:'La empresa le pagó a su fundador, Adam Neumann, US$5,9 millones por la marca "We", que estaba a nombre de una sociedad suya.',
+  r:'Se supo al publicar los documentos para salir a bolsa. Tuvo que devolver la plata, la salida a bolsa se canceló ese mismo año y Neumann dejó de ser CEO. En Chile, un gasto personal pagado por la empresa es un "gasto rechazado" para el SII, con un impuesto de 40% (artículo 21 de la Ley de la Renta).',
+  p:'Mezclar plata personal y de la empresa, aunque se devuelva, destruye la confianza de quien mira desde afuera.',
+  f:'Business Insider y prospecto S-1 enmendado (2019); Ley sobre Impuesto a la Renta, art. 21'},
+ {l:'Datos de rondas de inversión · Carta, 2024',
+  d:'Carta analizó miles de rondas de inversión de startups en su etapa inicial.',
+  r:'En la primera ronda, los fundadores entregan normalmente cerca del 20% de la empresa. Menos del 10% de las rondas entrega 30% o más. La recomendación de Carta: si en la primera ronda piden 30% o más, hay que levantarse de la mesa.',
+  p:'Una oferta con plazo corto y un porcentaje muy alto suele ser presión, no oportunidad.',
+  f:'Carta, informes de rondas semilla (2024)'},
+ {l:'Bahía de Cochinos · Cuba, abril de 1961',
+  d:'Los asesores de Kennedy aprobaron el plan de la CIA para invadir Cuba. Varios tenían dudas, pero no las dijeron para no romper el consenso.',
+  r:'Desembarcaron cerca de 1.400 exiliados; en 3 días más de 100 murieron y unos 1.100 fueron capturados. Irving Janis lo usó en 1972 como caso central de "pensamiento de grupo". Al año siguiente, en la crisis de los misiles, Kennedy pidió que cada propuesta fuera atacada a propósito antes de aprobarla.',
+  p:'Que nadie se oponga no prueba que la idea sea buena.',
+  f:'Irving Janis, Victims of Groupthink (1972)'},
+ {l:'Estudio de Harvard · casi 4.000 empresas nuevas',
+  d:'Wasserman estudió qué pasa cuando un socio baja su aporte y la propiedad sigue igual.',
+  r:'La sensación de que "unos cargan con otros" es una de las causas más comunes de quiebre entre fundadores. Sus recomendaciones: dejar escrito desde el inicio cómo se ajusta la participación si cambia la dedicación.',
+  p:'Apoyar a la persona y aplicar la regla escrita se pueden hacer al mismo tiempo.',
+  f:'Noam Wasserman, The Founder\'s Dilemmas (2012)'},
+ {l:'Netscape y Slack · EE.UU., 1998 y 2021',
+  d:'Microsoft regalaba Internet Explorer con Windows. En enero de 1998 Netscape respondió dejando su navegador gratis, igual que el grande.',
+  r:'Perdió su principal fuente de ingresos y aun así siguió perdiendo usuarios. En noviembre de 1998 se vendió a AOL. Caso contrario: Microsoft incluyó Teams gratis con Office 365. Slack no bajó su precio, se enfocó en lo que hacía mejor, y en julio de 2021 Salesforce la compró en US$27.700 millones.',
+  p:'Contra un grande que regala, bajar el precio es jugar en su cancha.',
+  f:'Engadget (2014); Salesforce (2021)'}
+];
+Q.forEach((q,i)=>q.ev=EV[i]);
 
 const PEOPLE=[{id:'martin',n:'Martín',own:'P',c:'m'},{id:'benjamin',n:'Benjamín',own:'N',c:'b'},{id:'pablo',n:'Pablo',own:'T',c:'p'},{id:'felipe',n:'Felipe',own:'S',c:'f'}];
 const DIMS={P:'Prioridades y foco',N:'Clientes y plata',T:'Planificación',S:'Riesgo y control',I:'Iniciativa',R:'Respeto de roles',E:'Ética',C:'Comunicación'};
@@ -438,7 +527,12 @@ function reveal(list){
       const c=document.createElement('span');c.className='ch';c.textContent=(a>=0&&q.o[a])?per.n+' eligió: '+q.o[a][0]:per.n+' no respondió a tiempo.';
       const co=document.createElement('span');co.className='cons';co.textContent=(a>=0&&q.o[a])?'Consecuencia: '+q.o[a][2]:'Consecuencia: no decidir también es decidir; el problema siguió creciendo.';
       const ok=document.createElement('span');ok.className='ok';ok.textContent='Lo correcto: '+q.o[q.best][0]+' '+q.why;
-      e.append(t,c,co,ok);card.append(e);});
+      e.append(t,c,co,ok);
+      if(q.ev){const v=document.createElement('div');v.className='ev';
+        const mk=(cls,txt)=>{const s=document.createElement('span');s.className=cls;s.textContent=txt;v.append(s);};
+        mk('ev-h','Esto ya pasó · '+q.ev.l);mk('','Qué decidieron: '+q.ev.d);mk('','Qué les pasó: '+q.ev.r);mk('ev-p','Por qué importa acá: '+q.ev.p);mk('ev-f','Fuente: '+q.ev.f);
+        e.append(v);}
+      card.append(e);});
     if(okCount[k]===Q.length){const e=document.createElement('p');e.className='chosen-note';e.textContent=per.n+' no cometió errores. Su aporte ahora es explicarle al resto cómo pensó cada decisión.';card.append(e);}
     else{const e=document.createElement('p');e.className='chosen-note';e.textContent=(Q.length-okCount[k])+' debilidades detectadas a tiempo. Cada una es un punto concreto para mejorar, no una nota.';card.insertBefore(e,dims);}
     res.append(card);});
