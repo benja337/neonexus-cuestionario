@@ -9,6 +9,10 @@
 <style>
 html,body{margin:0}
 [hidden]{display:none!important}
+.conf{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.conf-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.conf-btns .btn{text-align:center}
+.opt.picked{border-color:var(--accent);background:#2a1d15}
 
 /* Layout: una sola columna tipo pantalla de juego (máx. 720px): cabecera con avance, tarjeta de mensaje, alternativas, retroalimentación; resultados al final */
 :root{
@@ -105,6 +109,10 @@ details.person summary::-webkit-details-marker{display:none}
     <div class="msg" id="msg"><span class="from" id="from">—</span><span class="txt" id="text">—</span></div>
     <div class="timer"><i id="tbar" style="width:100%"></i></div>
     <div class="opts" id="opts"></div>
+    <div class="conf" id="conf" hidden>
+      <p class="muted">¿Qué tan seguro estás de esa decisión?</p>
+      <div class="conf-btns"><button class="btn" id="c-s" type="button">Estoy seguro</button><button class="btn" id="c-d" type="button">Tengo dudas</button></div>
+    </div>
   </section>
 
   <section class="card wait" id="done" hidden>
@@ -243,6 +251,7 @@ const Q=[
   ['Mandarles un correo a todos los clientes comparándonos.',{C:1,P:1},'Hablar del competidor les muestra a nuestros clientes que existe una opción gratis.']],best:1,
   why:'Contra un grande no se compite en precio, sino en foco.'}
 ];
+const TRAMPA=[["prudente", null, "generosa", "culpa"], ["evita", null, "atajo", "prudente"], ["prudente", null, "generosa", "culpa"], ["evita", null, "generosa", "atajo"], ["generosa", null, "firme", "evita"], ["evita", null, "firme", "prudente"], ["atajo", null, "atajo", "evita"], ["generosa", null, "generosa", "firme"], ["generosa", null, "generosa", "firme"], ["generosa", null, "firme", "atajo"], ["evita", null, "culpa", "evita"], ["evita", null, "firme", "atajo"], ["atajo", null, "atajo", "firme"], ["evita", null, "prudente", "prudente"], ["evita", null, "firme", "generosa"], ["generosa", null, "atajo", "atajo"]];
 
 const PEOPLE=[{id:'martin',n:'Martín',own:'P',c:'m'},{id:'benjamin',n:'Benjamín',own:'N',c:'b'},{id:'pablo',n:'Pablo',own:'T',c:'p'},{id:'felipe',n:'Felipe',own:'S',c:'f'}];
 const DIMS={P:'Prioridades y foco',N:'Clientes y plata',T:'Planificación',S:'Riesgo y control',I:'Iniciativa',R:'Respeto de roles',E:'Ética',C:'Comunicación'};
@@ -256,12 +265,12 @@ let who=null,i=0,answers=[],times=[],posi=[],curOrd=[],timer=null,t0=0,used=0,lo
 // ── código: NX-<persona>-<respuestas><letras><tiempos>-<control> ──
 const B36=n=>Math.max(0,Math.min(1295,n)).toString(36).padStart(2,'0');
 const chk=s=>{let h=0;for(const ch of s)h=(h*31+ch.charCodeAt(0))%1296;return B36(h);};
-function encode(p,ans,pos,tms){const body=ans.map(a=>a<0?'x':String(a)).join('')+pos.map(a=>a<0?'x':String(a)).join('')+tms.map(t=>B36(Math.round(t/100))).join('');
+function encode(p,ans,pos,tms,cf){const body=ans.map(a=>a<0?'x':String(a)).join('')+pos.map(a=>a<0?'x':String(a)).join('')+tms.map(t=>B36(Math.round(t/100))).join('')+(cf||[]).map(c=>c||'x').join('');
   const s=p.c+'-'+body;return 'NX-'+s+'-'+chk(s);}
-function decode(code){const m=String(code).trim().match(/^NX-([mbpf])-([0-3x]{16})([0-3x]{16})([0-9a-z]{32})-([0-9a-z]{2})$/i);
-  if(!m)return null;const s=m[1].toLowerCase()+'-'+m[2]+m[3]+m[4].toLowerCase();if(chk(s)!==m[5].toLowerCase())return{error:'control'};
+function decode(code){const m=String(code).trim().match(/^NX-([mbpf])-([0-3x]{16})([0-3x]{16})([0-9a-z]{32})([sdx]{16})?-([0-9a-z]{2})$/i);
+  if(!m)return null;const s=m[1].toLowerCase()+'-'+m[2]+m[3]+m[4].toLowerCase()+(m[5]||'').toLowerCase();if(chk(s)!==m[6].toLowerCase())return{error:'control'};
   const per=PEOPLE.find(p=>p.c===m[1].toLowerCase());
-  return{persona:per.id,respuestas:[...m[2]].map(c=>c==='x'?-1:+c),posiciones:[...m[3]].map(c=>c==='x'?-1:+c),tiempos:m[4].toLowerCase().match(/../g).map(x=>parseInt(x,36)*100)};}
+  return{persona:per.id,respuestas:[...m[2]].map(c=>c==='x'?-1:+c),posiciones:[...m[3]].map(c=>c==='x'?-1:+c),tiempos:m[4].toLowerCase().match(/../g).map(x=>parseInt(x,36)*100),seguridad:m[5]?[...m[5].toLowerCase()]:[]};}
 
 function namesUI(){
   const box=$('names');box.replaceChildren();
@@ -272,7 +281,7 @@ function namesUI(){
       $('status').textContent=prev?'En este dispositivo ya respondió '+p.n+'. Si empiezas de nuevo, el código anterior deja de servir.':'';};
     box.append(b);});
 }
-$('start').onclick=()=>{if(!who)return;playing=true;i=0;answers=[];times=[];posi=[];$('intro').hidden=true;$('how').hidden=true;$('play').hidden=false;show();};
+$('start').onclick=()=>{if(!who)return;playing=true;i=0;answers=[];times=[];posi=[];conf=[];$('intro').hidden=true;$('how').hidden=true;$('play').hidden=false;show();};
 
 function show(){
   const q=Q[i];const ord=shuffle([0,1,2,3]);curOrd=ord;
@@ -286,14 +295,20 @@ function show(){
 }
 function tick(){if(document.hidden)return;const left=Math.max(0,SECS-used-(Date.now()-t0)/1000);$('tbar').style.width=(left/SECS*100)+'%';if(left<=0)pick(-1);}
 document.addEventListener('visibilitychange',()=>{if(!playing)return;if(document.hidden){used+=(Date.now()-t0)/1000;}else{t0=Date.now();}});
+let conf=[],confT=null;
 function pick(oi){if(locked||answers[i]!==undefined)return;locked=true;clearInterval(timer);answers[i]=oi;
   times[i]=Math.round((used+(document.hidden?0:(Date.now()-t0)/1000))*1000);posi[i]=oi<0?-1:curOrd.indexOf(oi);
-  $('opts').querySelectorAll('button').forEach(b=>b.disabled=true);
-  setTimeout(()=>{i++;if(i<Q.length)show();else finish();},350);}
+  $('opts').querySelectorAll('button').forEach(b=>{b.disabled=true;if(oi>=0&&b===$('opts').children[posi[i]])b.classList.add('picked');});
+  if(oi<0){conf[i]='x';setTimeout(next,350);return;}
+  $('conf').hidden=false;$('c-s').disabled=false;$('c-d').disabled=false;$('conf').scrollIntoView({block:'nearest'});
+  confT=setTimeout(()=>setConf('x'),8000);}
+function setConf(v){if(conf[i]!==undefined)return;clearTimeout(confT);conf[i]=v;$('c-s').disabled=true;$('c-d').disabled=true;setTimeout(next,250);}
+$('c-s').onclick=()=>setConf('s');$('c-d').onclick=()=>setConf('d');
+function next(){$('conf').hidden=true;i++;if(i<Q.length)show();else finish();}
 
 function finish(){
   playing=false;$('play').hidden=true;$('done').hidden=false;$('how').hidden=false;
-  const code=encode(who,answers,posi,times);$('code').textContent=code;
+  const code=encode(who,answers,posi,times,conf);$('code').textContent=code;
   try{localStorage.setItem('nx-code-'+who.id,code);}catch(e){}
   window.scrollTo(0,0);
 }
@@ -349,6 +364,36 @@ function integrity(r,ans){
   return{nivel:'bien',titulo:'Respondió con atención',txt:'Leyó y decidió en tiempos normales. Sus resultados reflejan su criterio real. '+base};
 }
 
+// ── estilo de decisión: qué tipo de trampa se repite ──
+const ESTILO={
+  prudente:['Posterga para estar seguro','Bajo presión espera, confirma o pospone. En una crisis, el costo de esperar suele ser mayor que el de equivocarse.'],
+  generosa:['Cede para mantener la relación','Acepta, regala o paga de más para que nadie se moleste. Es el camino más rápido para trabajar gratis o perder plata.'],
+  firme:['Responde con dureza','Rechaza, exige o castiga. Protege a la empresa, pero cierra puertas que valían la pena.'],
+  evita:['Evita el conflicto','Deja pasar, no dice nada o tapa el problema. En una sociedad, eso hace que los problemas crezcan en silencio.'],
+  culpa:['Busca culpables primero','Antes de resolver, busca quién se equivocó. En una crisis eso consume el tiempo que faltaba.'],
+  atajo:['Toma atajos','Promete de más o elige la salida rápida. Funciona hoy y explota después.']};
+function estilo(ans){
+  if(typeof TRAMPA==='undefined')return null;
+  const c={};ans.forEach((a,qi)=>{if(a>=0&&TRAMPA[qi]&&TRAMPA[qi][a])c[TRAMPA[qi][a]]=(c[TRAMPA[qi][a]]||0)+1;});
+  const top=Object.entries(c).sort((a,b)=>b[1]-a[1]);
+  if(!top.length)return null;
+  if(top[0][1]>=3)return{tipo:top[0][0],titulo:ESTILO[top[0][0]][0]+' ('+top[0][1]+' veces)',txt:ESTILO[top[0][0]][1]};
+  return{tipo:null,titulo:'Sin un patrón dominante',txt:'Sus errores son de tipos distintos ('+top.map(([k,v])=>ESTILO[k][0].toLowerCase()+': '+v).join(', ')+'). No repite una misma reacción bajo presión.'};
+}
+// ── seguridad: errores cometidos estando seguro ──
+function seguridad(r,ans){
+  const sg=r.seguridad||[];if(!sg.length)return null;
+  let segMal=0,segBien=0,dudaBien=0,dudaMal=0;
+  Q.forEach((q,qi)=>{const ok=ans[qi]===q.best;if(sg[qi]==='s'){ok?segBien++:segMal++;}else if(sg[qi]==='d'){ok?dudaBien++:dudaMal++;}});
+  const tot=segMal+segBien+dudaBien+dudaMal;
+  let titulo,txt,nivel='bien';
+  if(segMal>=3){nivel='mal';titulo=segMal+' errores cometidos estando seguro';txt='Son los errores más peligrosos: en la vida real nadie los habría frenado, porque estaba convencido. Antes de decisiones grandes, conviene que alguien más revise.';}
+  else if(dudaBien>=4){nivel='medio';titulo='Acierta más de lo que cree';txt='En '+dudaBien+' decisiones tuvo dudas y acertó. Su criterio es mejor que su confianza: puede defender más sus ideas.';}
+  else if(segMal>0){nivel='medio';titulo=segMal+(segMal===1?' error':' errores')+' estando seguro';txt='Pocos, pero existen. Revisar esas situaciones con el equipo ayuda a ajustar el criterio.';}
+  else{titulo='Buena calibración';txt='Cuando estuvo seguro, acertó. Sabe distinguir lo que sabe de lo que no.';}
+  return{nivel,titulo,txt:txt+' Seguro y acertó: '+segBien+'. Seguro y se equivocó: '+segMal+'. Con dudas y acertó: '+dudaBien+'. Con dudas y se equivocó: '+dudaMal+'.',segMal};
+}
+
 function reveal(list){
   const tf=$('teamfind');tf.replaceChildren();
   const ans=list.map(r=>(Array.isArray(r.respuestas)?r.respuestas:[]).map(Number));
@@ -363,6 +408,11 @@ function reveal(list){
   const avg={};Object.keys(DIMS).forEach(k=>avg[k]=Math.round(ans.reduce((s,a)=>s+pct(a)[k],0)/ans.length));
   const weak=Object.entries(avg).sort((a,b)=>a[1]-b[1])[0];
   add(weak[1]>=70?'good':'','Área más débil del equipo: '+DIMS[weak[0]]+' ('+weak[1]+'%)',weak[1]>=70?'Incluso el área más baja está sobre 70%.':'Aquí está el riesgo más probable de la empresa. Conviene escribir una regla del equipo para esto antes de lanzar.');
+  const sgTeam=list.map((r,k)=>seguridad(r,ans[k])).filter(Boolean);
+  if(sgTeam.length){const n=sgTeam.reduce((a,s)=>a+s.segMal,0);add(n>=6?'':n>0?'mid':'good','Errores cometidos estando seguros: '+n+' entre los 4',n?'Son los que en la realidad nadie habría frenado. Antes de decisiones grandes, que siempre revise otro socio.':'Cuando el equipo estuvo seguro, acertó. Buena señal para decidir bajo presión.');}
+  const estT={};list.forEach((r,k)=>{const e=estilo(ans[k]);if(e&&e.tipo)estT[e.tipo]=(estT[e.tipo]||0)+1;});
+  const repEst=Object.entries(estT).filter(([,v])=>v>=2);
+  repEst.forEach(([t,v])=>add('mid','Estilo compartido: '+ESTILO[t][0].toLowerCase()+' ('+v+' socios)',ESTILO[t][1]+' Si varios reaccionan igual, nadie equilibra al resto.'));
   const integ=list.map((r,k)=>integrity(r,ans[k]));
   const flagged=list.map((r,k)=>[PEOPLE.find(p=>p.id===r.persona).n,integ[k]]).filter(([,g])=>g.nivel==='mal'||g.nivel==='medio');
   if(flagged.length)add('','Atención a cómo se respondió',flagged.map(([n,g])=>n+': '+g.titulo).join(' · ')+'. Revisen esos resultados con cuidado antes de sacar conclusiones.');
@@ -379,6 +429,9 @@ function reveal(list){
     card.append(dims);
     const g=integ[k];const gi=document.createElement('div');gi.className='tf'+(g.nivel==='bien'?' good':'')+(g.nivel==='medio'?' mid':'');
     const gb=document.createElement('b');gb.textContent='Cómo respondió: '+g.titulo;const gs=document.createElement('span');gs.textContent=g.txt;gi.append(gb,gs);card.append(gi);
+    const blk=(cls,t,x)=>{const d=document.createElement('div');d.className='tf'+(cls?' '+cls:'');const b=document.createElement('b');b.textContent=t;const s=document.createElement('span');s.textContent=x;d.append(b,s);card.append(d);};
+    const es=estilo(ans[k]);if(es)blk(es.tipo?'mid':'good','Estilo de decisión: '+es.titulo,es.txt);
+    const se=seguridad(r,ans[k]);if(se)blk(se.nivel==='bien'?'good':se.nivel==='medio'?'mid':'','Seguridad: '+se.titulo,se.txt);
     Q.forEach((q,qi)=>{const a=ans[k][qi];if(a===q.best)return;
       const e=document.createElement('div');e.className='err';
       const t=document.createElement('span');t.className='q';t.textContent=q.d+' · '+q.t;
