@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cuestionario NeoNexus</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+html,body{margin:0}
+[hidden]{display:none!important}
+
+/* Layout: una sola columna tipo pantalla de juego (máx. 720px): cabecera con avance, tarjeta de mensaje, alternativas, retroalimentación; resultados al final */
+:root{
+  color-scheme:dark;
+  --bg:#0e151b; --panel:#15212a; --panel2:#1b2a35; --line:#2a3b47; --fg:#e4ecf1; --muted:#98a9b3;
+  --accent:#e2743b; --client:#4f93e6; --team:#9085e9; --system:#d9a441;
+  --good:#3fb38f; --bad:#e6625b;
+  --f-head:"Archivo","Segoe UI",system-ui,sans-serif; --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--f-head);font-weight:800;font-size:clamp(1.6rem,5vw,2.2rem);margin:0;line-height:1.15;text-wrap:balance}
+h2{font-family:var(--f-head);font-size:1.15rem;margin:0;text-wrap:balance}
+p{margin:0}
+.eyebrow{font:600 .72rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.btn{font:700 1rem var(--f-body);border-radius:10px;padding:12px 18px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);cursor:pointer;text-align:left}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#1a0f08;text-align:center}
+.btn:disabled{cursor:default;opacity:1}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.names{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px}
+.names .btn[aria-pressed="true"]{border-color:var(--accent);background:#2a1d15}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:12px;font:600 .85rem var(--f-mono);color:var(--muted)}
+.bar{height:6px;background:var(--panel2);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.timer{height:4px;background:var(--panel2);border-radius:999px;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--system)}
+.msg{border-left:4px solid var(--client);background:var(--panel2);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.msg.team{border-left-color:var(--team)} .msg.system{border-left-color:var(--system)}
+.from{font:600 .78rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.msg .txt{font-size:1.05rem}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start}
+.opt b{font:700 .85rem var(--f-mono);color:var(--accent);min-width:1.2em}
+.opt.best{border-color:var(--good);background:#13291f}
+.opt.chosen:not(.best){border-color:var(--bad);background:#2c1717}
+.fb{border-radius:8px;padding:12px 14px;background:var(--panel2);font-size:.95rem}
+.fb strong{display:block;margin-bottom:4px}
+.res{display:flex;flex-direction:column;gap:14px}
+.person{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.person h3{font-family:var(--f-head);margin:0;font-size:1.05rem;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.person h3 span{font:500 .8rem var(--f-mono);color:var(--muted)}
+.dims{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:8px 18px}
+.dim{display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:.88rem;align-items:center}
+.dim .b{grid-column:1/-1;height:6px;background:var(--panel2);border-radius:999px;overflow:hidden}
+.dim .b i{display:block;height:100%}
+.dim .v{font-variant-numeric:tabular-nums;color:var(--muted)}
+.dim.own{font-weight:700}
+.risk{font-size:.88rem;color:var(--muted)}
+.risk li{margin-bottom:4px}
+.code{font:500 .8rem var(--f-mono);word-break:break-all;background:var(--panel2);padding:10px;border-radius:8px;user-select:all}
+@media (prefers-reduced-motion: reduce){.bar i{transition:none}}
+.wait{display:flex;flex-direction:column;gap:10px}
+.who4{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:8px}
+.who4 span{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-weight:600;font-size:.92rem}
+.who4 span.ok{border-color:var(--good);color:var(--good)}
+.team-find{display:flex;flex-direction:column;gap:8px}
+.tf{border-left:4px solid var(--bad);background:var(--panel2);border-radius:6px;padding:10px 12px;font-size:.93rem}
+.tf.good{border-left-color:var(--good)}
+.tf.mid{border-left-color:var(--system)}
+.person .tf{margin-top:2px}
+.tf b{display:block;margin-bottom:2px}
+.sub{font-family:var(--f-head);font-size:1rem;margin:8px 0 0}
+.err{border-top:1px solid var(--line);padding-top:8px;font-size:.9rem;display:flex;flex-direction:column;gap:3px}
+.err .q{color:var(--muted);font-size:.82rem}
+.err .ch{color:var(--bad);font-weight:600}
+.err .ok{color:var(--good)}
+details.person summary{cursor:pointer;list-style:none}
+details.person summary::-webkit-details-marker{display:none}
+.chosen-note{font-size:.88rem;color:var(--muted)}
+.names .btn:disabled{opacity:.45}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app">
+  <section class="card" id="intro">
+    <span class="eyebrow">NeoNexus · Cuestionario de equipo</span>
+    <h1>Un año en NeoNexus</h1>
+    <p>16 situaciones reales de nuestra empresa, 35 segundos cada una. Unos 7 minutos.</p>
+    <p class="muted">Responde lo que harías de verdad. No vas a saber si acertaste: al final te aparece un código que le mandas a Benjamín por WhatsApp, y los resultados de los 4 se revisan juntos.</p>
+    <h2>¿Quién eres?</h2>
+    <div class="names" id="names"></div>
+    <button class="btn primary" id="start" type="button" disabled>Empezar</button>
+    <p class="muted" id="status"></p>
+  </section>
+
+  <section class="card" id="play" hidden>
+    <div class="hud"><span id="day">—</span><span id="count">—</span></div>
+    <div class="bar"><i id="prog" style="width:0"></i></div>
+    <div class="msg" id="msg"><span class="from" id="from">—</span><span class="txt" id="text">—</span></div>
+    <div class="timer"><i id="tbar" style="width:100%"></i></div>
+    <div class="opts" id="opts"></div>
+  </section>
+
+  <section class="card wait" id="done" hidden>
+    <span class="eyebrow">Terminaste</span>
+    <h2>Mándale este código a Benjamín</h2>
+    <p class="muted">Cópialo y pégalo en WhatsApp tal cual. Sin el código, tus respuestas no cuentan.</p>
+    <div class="code" id="code">—</div>
+    <button class="btn primary" id="copy" type="button">Copiar código</button>
+    <p class="muted" id="copied" hidden>Código copiado. Ahora pégalo en WhatsApp.</p>
+  </section>
+
+  <section class="card" id="results" hidden>
+    <span class="eyebrow">Resultados del equipo</span>
+    <h2>Pega los códigos</h2>
+    <p class="muted">Pega aquí los códigos de los 4 (uno por línea o todos juntos).</p>
+    <textarea id="codes" rows="5" style="width:100%;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px;font:500 .85rem var(--f-mono)"></textarea>
+    <button class="btn primary" id="go" type="button">Ver resultados</button>
+    <p class="muted" id="cmsg"></p>
+  </section>
+
+  <section class="card" id="reveal" hidden>
+    <span class="eyebrow">Los 4 terminaron</span>
+    <h2>Resultados del equipo</h2>
+    <div class="tf good"><b>Cómo leer esto</b><span>Un error aquí no significa que vayamos a fracasar: significa que encontramos una debilidad a tiempo, cuando todavía cuesta cero. Lo peligroso sería acertar todo, porque no aprenderíamos nada. Cada error de abajo es algo concreto que tenemos que mejorar como equipo.</span></div>
+    <div class="tf good"><b>De dónde salen estas situaciones</b><span>No son inventadas. Salen de los informes que hicimos los 4: el Documento 0, la dimensión técnica, los requisitos para publicar en Google Play y App Store, el análisis de mercado, el modelo de precios y la proyección de sueldos. Ahí aparecieron nuestras carencias en plata, contratos, socios y toma de decisiones, y se cruzaron con los errores que más cometen las empresas nuevas.</span></div>
+    <h3 class="sub">El equipo completo</h3>
+    <div class="team-find" id="teamfind"></div>
+    <h3 class="sub">Cada socio</h3>
+    <div class="res" id="res"></div>
+  </section>
+
+  <section class="card" id="how">
+    <h2>Cómo se lee</h2>
+    <p class="muted">Cada situación mide criterio en prioridades, clientes y plata, planificación, y riesgo y control, además de cuatro hábitos de equipo: iniciativa, respeto de roles, ética y comunicación. Un error aquí cuesta cero. El mismo error en la realidad puede costar la empresa.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+// [texto, {dimensión:puntos}, qué le pasa a la empresa si se elige y no es la mejor]
+const Q=[
+ {d:'Mes 11, 16:40',f:'system',from:'Cartola de la empresa',t:'Pagamos $2 millones a un "proveedor" que nos pidió por correo cambiar su cuenta bancaria. Hace una hora. Era falso.',o:[
+  ['Confirmar primero con el proveedor real antes de hacer ruido.',{S:0,I:0},'Cada hora que pasa, el estafador mueve la plata a otras cuentas. Mientras confirmábamos, los $2 millones desaparecieron.'],
+  ['Llamar al banco ya para frenarla; denunciar después.',{S:3,I:2},''],
+  ['Pagarle de nuevo al proveedor real para no quedar mal con él.',{S:0,N:1},'Ahora perdimos $4 millones y no hicimos nada para recuperar los primeros. Cuidar la imagen costó el doble.'],
+  ['Averiguar quién del equipo cayó en el engaño, para que no se repita.',{S:1,R:0},'Buscar culpables primero hace perder las horas en que todavía se podía frenar el pago.']],best:1,
+  why:'En un fraude, los minutos valen plata. Primero se intenta frenar el daño; después se investiga.'},
+ {d:'Mes 12, 09:50',f:'system',from:'Antes de una demostración',t:'En 10 minutos le mostramos la app al director de un instituto grande. Acaba de dejar de funcionar.',o:[
+  ['Avisarle que tuvimos un imprevisto familiar y pedir otra fecha.',{E:0,C:0},'Si descubre la excusa, y estas cosas se descubren, perdimos la venta y la reputación con todo su círculo.'],
+  ['Hacer la reunión y decir la verdad: mostrar lo que funciona.',{E:3,C:2},''],
+  ['Mostrarle grabaciones de la app como si fuera en vivo.',{E:0},'Le vendimos algo que en ese momento no funcionaba. Si lo nota, la relación termina ahí.'],
+  ['Cancelar la reunión y volver cuando la app esté perfecta.',{N:1,C:0},'Las oportunidades con directores no esperan. Cuando la app esté perfecta, ya habrá elegido otra opción.']],best:1,
+  why:'La confianza se gana mostrando cómo se reacciona ante un problema, no escondiéndolo.'},
+ {d:'Mes 13',f:'client',from:'Correo del director',t:'"Su app calculó mal las notas de 40 alumnos. Si no lo resuelven hoy, iremos a abogados." Es cierto.',o:[
+  ['No admitir nada por escrito hasta hablar con un abogado.',{E:1,C:0},'El cliente lee silencio como indiferencia. El conflicto que se resolvía con una corrección termina en demanda.'],
+  ['Reconocerlo hoy, corregir las notas y decir a quiénes afectó.',{E:3,C:3},''],
+  ['Ofrecerle devolver todo lo que ha pagado para calmarlo.',{N:0,E:2},'Devolver todo no arregla las 40 notas, que es lo que le importa. Perdemos la plata y el problema sigue.'],
+  ['Explicarle que el error vino de los datos que cargó su equipo.',{E:0,C:0},'Aunque fuera cierto en parte, culpar al cliente en plena crisis convierte un error en una pelea.']],best:1,
+  why:'Ante un error real, reconocerlo rápido y repararlo es lo que más protege, incluso legalmente.'},
+ {d:'Mes 14',f:'team',from:'Mensaje de un socio',t:'"Me salió un trabajo y renuncio a la empresa." Faltan 3 días para la entrega más importante del año.',o:[
+  ['Pedirle que se quede al menos hasta después de la entrega.',{R:1,T:1},'Un socio que ya se fue mentalmente trabaja a medias. La entrega queda en manos de alguien que ya no responde por ella.'],
+  ['Repartir sus tareas hoy; lo del pacto, después de la entrega.',{T:3,C:2,R:2},''],
+  ['Ofrecerle un porcentaje mayor de la empresa para que se quede.',{N:0,R:0},'Se premia con propiedad a quien se iba. Los que se quedaron entienden que amenazar con irse paga.'],
+  ['Pedirle al cliente más plazo sin explicarle por qué.',{C:0,N:1},'Un cliente que recibe excusas vagas a 3 días de la entrega pierde la confianza en todo el equipo.']],best:1,
+  why:'En una crisis se separa lo urgente (la entrega) de lo importante (la salida del socio).'},
+ {d:'Mes 1',f:'team',from:'Pacto de socios',t:'Somos 4 y cada uno tendrá 25%. ¿Desde cuándo es de cada uno?',o:[
+  ['Desde el primer día, para que nadie sienta desconfianza.',{E:1,R:0},'Si alguien se va en el mes 6, se lleva su 25% para siempre. Los otros tres trabajan años para alguien que ya no está.'],
+  ['Se gana en 4 años; nada antes del primer año.',{E:3,R:2},''],
+  ['Según lo que aporte cada uno, revisándolo cada mes.',{E:1,C:0},'Revisar la propiedad cada mes convierte cada reunión en una negociación. En un año nadie confía en nadie.'],
+  ['Lo decidimos cuando haya ventas y se vea quién aportó.',{E:0,C:0},'Con plata de por medio, cada uno recuerda su aporte como el más importante. Esa conversación llega tarde.']],best:1,
+  why:'Igual para todos, pero ganado con el tiempo: así es justo con quien se queda.'},
+ {d:'Mes 2',f:'team',from:'Pacto de socios',t:'Los 4 tenemos el mismo voto. ¿Qué pasa si quedamos 2 contra 2 en algo importante?',o:[
+  ['Lo conversamos con calma hasta que lleguemos a un acuerdo.',{C:1,R:1},'Sin regla de desempate, un 2 contra 2 urgente paraliza la empresa por semanas. Muchas sociedades se rompen en su primer empate serio.'],
+  ['Decide el responsable del área, o un mentor si es de todos.',{R:3,C:2},''],
+  ['Decide quien haya trabajado más horas en el proyecto ese mes.',{R:0,E:1},'Contar horas no mide criterio y abre la discusión de quién trabaja más. Es peor que el empate.'],
+  ['Se vota de nuevo una semana después.',{C:1},'Si nadie cambia de opinión, seguimos empatados una semana más, ahora con más tensión.']],best:1,
+  why:'Con 4 socios iguales el empate va a pasar. La regla se escribe antes de necesitarla.'},
+ {d:'Mes 4',f:'team',from:'Planificación',t:'Un socio estima que un trabajo toma 3 semanas. El cliente pregunta para cuándo estará.',o:[
+  ['3 semanas: él es quien lo va a hacer.',{T:0,P:0},'Los plazos de proyectos nuevos suelen quedarse cortos por 2 o 3 veces. Llegamos tarde y quedamos como poco serios.'],
+  ['Decirle 6 semanas y entregar antes si se puede.',{T:3,N:1},''],
+  ['2 semanas, para que el cliente quede impresionado.',{T:0,E:1},'Prometer menos plazo para impresionar asegura un incumplimiento.'],
+  ['Que lo vamos a tener "lo antes posible".',{T:1,C:0},'Al cliente no le sirve una fecha que no existe. No puede planificar nada con eso.']],best:1,
+  why:'Casi todos subestiman los plazos. Se promete con holgura y se sorprende entregando antes.'},
+ {d:'Mes 6',f:'client',from:'Jefe de carrera',t:'"Hagamos un piloto de 6 meses en mi ramo. Gratis, y si funciona compramos."',o:[
+  ['Aceptar: es justo la oportunidad que estábamos esperando hace meses.',{N:0,P:1},'Un piloto gratis y largo no prueba que alguien vaya a pagar. Al final llega un "no hay presupuesto" y perdimos 6 meses.'],
+  ['Pedir 2 meses, con pago simbólico y precio final por escrito.',{N:3,C:1},''],
+  ['Aceptar los 6 meses si pone su logo en nuestra web.',{N:1},'Un logo no paga cuentas ni prueba que la institución compre. La venta real sigue sin empezar.'],
+  ['Rechazarlo: un piloto gratis desvaloriza el producto frente al resto.',{N:1,C:0},'Se pierde el único contacto dispuesto a probar. Sin piloto no hay evidencia para el siguiente cliente.']],best:1,
+  why:'Un piloto valida solo si cuesta algo, aunque sea poco, y si deja escrito el paso siguiente.'},
+ {d:'Mes 9',f:'client',from:'Cliente principal',t:'"Les compramos si agregan reportes hechos a la medida de nosotros." Ningún otro cliente los usaría.',o:[
+  ['Hacerlos: es nuestro cliente más importante.',{P:0,N:1},'Así una empresa de producto se vuelve consultora: cada cliente pide lo suyo y ya no se puede vender lo mismo a nadie más.'],
+  ['Hacerlos como servicio aparte, cobrado aparte.',{P:3,N:2},''],
+  ['Hacerlos gratis, solo esta vez, para cerrar la venta.',{P:0,N:0},'"Solo esta vez" se repite con cada cliente. Regalamos semanas de trabajo que sirven a uno solo.'],
+  ['Rechazarlos para proteger el foco del producto.',{N:1,P:2},'Puede ser la única venta del año. Hay formas de aceptar sin dañar el producto.']],best:1,
+  why:'Lo que sirve a un solo cliente se cobra como servicio aparte. El producto es para todos.'},
+ {d:'Mes 10',f:'client',from:'Orden de compra',t:'El instituto firma. Paga a 60 días de recibir la factura, al final del semestre.',o:[
+  ['Aceptar: así pagan todas las instituciones.',{N:0},'Financiamos al cliente un semestre entero. Si la caja ya estaba justa, quebramos con un contrato firmado.'],
+  ['Pedir un anticipo y pagos por avance.',{N:3,C:1},''],
+  ['Exigir el pago total antes de empezar.',{N:1},'Una institución casi nunca paga todo por adelantado. Se arriesga la venta entera.'],
+  ['Aceptar y pedir un crédito para aguantar.',{N:1},'Deuda para financiar a un cliente que paga lento. Si se atrasa más, la deuda es nuestra.']],best:1,
+  why:'Vender no es cobrar. La caja se protege con anticipos y pagos por avance.'},
+ {d:'Mes 11',f:'system',from:'Cartola de la empresa',t:'En la cuenta de la empresa faltan $480 mil. Nadie recuerda en qué se gastaron.',o:[
+  ['Seguro alguien olvidó anotar un gasto. No vale la pena pelear.',{S:0,N:0},'Si no se aclara este descuadre, el próximo será mayor. Sin control, la plata se pierde de a poco y aparece la sospecha.'],
+  ['Revisar cada movimiento entre los 4 y poner doble firma.',{S:3,C:2},''],
+  ['Quitarle hoy el acceso a la cuenta a quien la administra.',{S:1,R:0},'Se acusa a un socio sin pruebas. Aunque aparezca la explicación, la confianza ya se rompió.'],
+  ['Reponerlo entre los 4 y no hablar más del tema.',{S:0,C:0},'Se tapa sin saber la causa. Si fue un cobro indebido, se va a repetir.']],best:1,
+  why:'La plata que no se explica se investiga de inmediato, entre todos, y se cambia el control.'},
+ {d:'Mes 15',f:'team',from:'Cartola de la empresa',t:'Un socio pagó una cena familiar con la tarjeta de la empresa. "La devuelvo a fin de mes", dice.',o:[
+  ['Si la devuelve a fin de mes, no hay ningún problema real.',{S:0,E:1},'Mezclar plata personal y de la empresa abre la puerta a que todos lo hagan, y ese gasto no se puede justificar ante el SII.'],
+  ['Que la devuelva, y la tarjeta queda solo para la empresa.',{S:3,E:2},''],
+  ['Quitarles la tarjeta a los 4 socios desde hoy mismo.',{S:1,R:0},'Se castiga a todos por el error de uno, y pagar gastos reales se vuelve un trámite.'],
+  ['Descontárselo de su parte de las ganancias del año.',{S:1,E:1},'Se trata como algo normal que se compensa después. El precedente queda: usar la tarjeta y pagar luego.']],best:1,
+  why:'La plata de la empresa no se presta, aunque sea poca y aunque se devuelva.'},
+ {d:'Mes 16, viernes',f:'client',from:'Un inversionista',t:'"Les pongo $20 millones por el 40% de la empresa. La oferta vence este viernes."',o:[
+  ['Aceptar: es mucha plata y quizás no vuelva a pasar.',{N:0},'Con 40% en la primera ronda, a la tercera los fundadores pierden el control. La fecha límite era presión.'],
+  ['No decidir con apuro: comparar y asesorarnos.',{N:3,C:1},''],
+  ['Contraofertar el 30% por la misma plata, antes del viernes.',{N:1},'Negociar sobre una base mala sigue siendo malo. El problema es vender tanto tan pronto, no el número exacto.'],
+  ['Rechazar: no queremos inversionistas.',{N:1,I:0},'A veces la inversión es lo que permite crecer. El error es aceptar cualquiera, no invertir.']],best:1,
+  why:'Una oferta buena aguanta una semana de análisis. Una que no la aguanta era presión.'},
+ {d:'Mes 17',f:'team',from:'Reunión de socios',t:'Los 4 aprobamos una idea grande en cinco minutos. Nadie dijo nada en contra.',o:[
+  ['Buena señal: estamos alineados y podemos avanzar rápido.',{C:0,P:0},'Cuando nadie se opone en cinco minutos, casi siempre es porque nadie quiso ser el pesado. Los errores grandes nacen así.'],
+  ['Pedir que uno defienda lo contrario antes de aprobar.',{C:3,P:2},''],
+  ['Votar de nuevo, esta vez en secreto, para ver dudas.',{C:1},'Puede mostrar dudas escondidas, pero no hace aparecer los argumentos en contra.'],
+  ['Dejarla una semana y volver a votarla con calma.',{C:1,P:1},'El tiempo ayuda, pero sin alguien que busque las fallas se vuelve a aprobar lo mismo.']],best:1,
+  why:'Un equipo que nunca discute deja de ver sus propios errores.'},
+ {d:'Mes 20',f:'team',from:'Un socio',t:'"Estoy agotado con la U y la empresa. Voy a bajar a medio tiempo, pero sigo con mi 25%."',o:[
+  ['Está bien: todos hemos estado así alguna vez, no pasa nada.',{R:1,E:1},'Si no se ajusta nada, en meses los otros tres sienten que cargan con él. El resentimiento destruye sociedades.'],
+  ['Apoyarlo y ajustar lo que gana, como dice el pacto.',{R:3,E:2,C:2},''],
+  ['Pedirle que siga como antes o que se retire de la empresa.',{R:0,C:0},'Presionar a alguien agotado lo saca de la empresa, y quizás de la U. Se pierde un socio que podía volver.'],
+  ['Repartir su trabajo entre los otros tres mientras tanto.',{R:1,T:1},'Se tapa el problema con sobrecarga. En semanas, el próximo agotado es otro.']],best:1,
+  why:'Cuidar a la persona y aplicar la regla escrita no se contradicen.'},
+ {d:'Mes 24',f:'team',from:'Reunión de socios',t:'Un competidor grande lanzó algo parecido, gratis. Alguien propone bajar nuestro precio a la mitad.',o:[
+  ['Bajar el precio para no perder clientes.',{N:0,P:0},'Una guerra de precios contra alguien más grande se pierde: ellos aguantan pérdidas mucho más tiempo.'],
+  ['Enfocarnos en lo que ellos no hacen bien.',{P:3,N:2},''],
+  ['Copiar sus funciones lo antes posible.',{P:0},'Correr detrás del grande nos deja siempre un paso atrás y sin identidad.'],
+  ['Mandarles un correo a todos los clientes comparándonos.',{C:1,P:1},'Hablar del competidor les muestra a nuestros clientes que existe una opción gratis.']],best:1,
+  why:'Contra un grande no se compite en precio, sino en foco.'}
+];
+
+const PEOPLE=[{id:'martin',n:'Martín',own:'P',c:'m'},{id:'benjamin',n:'Benjamín',own:'N',c:'b'},{id:'pablo',n:'Pablo',own:'T',c:'p'},{id:'felipe',n:'Felipe',own:'S',c:'f'}];
+const DIMS={P:'Prioridades y foco',N:'Clientes y plata',T:'Planificación',S:'Riesgo y control',I:'Iniciativa',R:'Respeto de roles',E:'Ética',C:'Comunicación'};
+const SECS=35;
+const MAX={};Object.keys(DIMS).forEach(k=>MAX[k]=0);
+Q.forEach(q=>{const m={};q.o.forEach(([,s])=>Object.entries(s).forEach(([k,v])=>m[k]=Math.max(m[k]||0,v)));Object.entries(m).forEach(([k,v])=>MAX[k]+=v);});
+const $=id=>document.getElementById(id);
+const shuffle=a=>{for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]];}return a;};
+let who=null,i=0,answers=[],times=[],posi=[],curOrd=[],timer=null,t0=0,used=0,locked=false,playing=false;
+
+// ── código: NX-<persona>-<respuestas><letras><tiempos>-<control> ──
+const B36=n=>Math.max(0,Math.min(1295,n)).toString(36).padStart(2,'0');
+const chk=s=>{let h=0;for(const ch of s)h=(h*31+ch.charCodeAt(0))%1296;return B36(h);};
+function encode(p,ans,pos,tms){const body=ans.map(a=>a<0?'x':String(a)).join('')+pos.map(a=>a<0?'x':String(a)).join('')+tms.map(t=>B36(Math.round(t/100))).join('');
+  const s=p.c+'-'+body;return 'NX-'+s+'-'+chk(s);}
+function decode(code){const m=String(code).trim().match(/^NX-([mbpf])-([0-3x]{16})([0-3x]{16})([0-9a-z]{32})-([0-9a-z]{2})$/i);
+  if(!m)return null;const s=m[1].toLowerCase()+'-'+m[2]+m[3]+m[4].toLowerCase();if(chk(s)!==m[5].toLowerCase())return{error:'control'};
+  const per=PEOPLE.find(p=>p.c===m[1].toLowerCase());
+  return{persona:per.id,respuestas:[...m[2]].map(c=>c==='x'?-1:+c),posiciones:[...m[3]].map(c=>c==='x'?-1:+c),tiempos:m[4].toLowerCase().match(/../g).map(x=>parseInt(x,36)*100)};}
+
+function namesUI(){
+  const box=$('names');box.replaceChildren();
+  PEOPLE.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=p.n;
+    b.setAttribute('aria-pressed',String(!!(who&&who.id===p.id)));
+    b.onclick=()=>{who=p;namesUI();$('start').disabled=false;
+      let prev=null;try{prev=localStorage.getItem('nx-code-'+p.id);}catch(e){}
+      $('status').textContent=prev?'En este dispositivo ya respondió '+p.n+'. Si empiezas de nuevo, el código anterior deja de servir.':'';};
+    box.append(b);});
+}
+$('start').onclick=()=>{if(!who)return;playing=true;i=0;answers=[];times=[];posi=[];$('intro').hidden=true;$('how').hidden=true;$('play').hidden=false;show();};
+
+function show(){
+  const q=Q[i];const ord=shuffle([0,1,2,3]);curOrd=ord;
+  $('day').textContent=q.d;$('count').textContent=(i+1)+' / '+Q.length;$('prog').style.width=(i/Q.length*100)+'%';
+  $('msg').className='msg '+(q.f==='client'?'':q.f);$('from').textContent=q.from;$('text').textContent=q.t;
+  const box=$('opts');box.replaceChildren();
+  ord.forEach((oi,pos)=>{const b=document.createElement('button');b.type='button';b.className='btn opt';
+    const l=document.createElement('b');l.textContent='ABCD'[pos];const s=document.createElement('span');s.textContent=q.o[oi][0];b.append(l,s);b.onclick=()=>pick(oi);box.append(b);});
+  clearInterval(timer);used=0;t0=Date.now();locked=false;$('tbar').style.width='100%';
+  timer=setInterval(tick,200);window.scrollTo(0,0);
+}
+function tick(){if(document.hidden)return;const left=Math.max(0,SECS-used-(Date.now()-t0)/1000);$('tbar').style.width=(left/SECS*100)+'%';if(left<=0)pick(-1);}
+document.addEventListener('visibilitychange',()=>{if(!playing)return;if(document.hidden){used+=(Date.now()-t0)/1000;}else{t0=Date.now();}});
+function pick(oi){if(locked||answers[i]!==undefined)return;locked=true;clearInterval(timer);answers[i]=oi;
+  times[i]=Math.round((used+(document.hidden?0:(Date.now()-t0)/1000))*1000);posi[i]=oi<0?-1:curOrd.indexOf(oi);
+  $('opts').querySelectorAll('button').forEach(b=>b.disabled=true);
+  setTimeout(()=>{i++;if(i<Q.length)show();else finish();},350);}
+
+function finish(){
+  playing=false;$('play').hidden=true;$('done').hidden=false;$('how').hidden=false;
+  const code=encode(who,answers,posi,times);$('code').textContent=code;
+  try{localStorage.setItem('nx-code-'+who.id,code);}catch(e){}
+  window.scrollTo(0,0);
+}
+$('copy').onclick=async()=>{const code=$('code').textContent;
+  try{await navigator.clipboard.writeText(code);$('copied').hidden=false;}
+  catch(e){const r=document.createRange();r.selectNodeContents($('code'));const sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);$('copied').textContent='Mantén presionado el código para copiarlo.';$('copied').hidden=false;}};
+
+// ── resultados: página.html#resultados ──
+$('go').onclick=()=>{
+  const found=($('codes').value.match(/NX-[a-z]-[0-9a-z]+-[0-9a-z]{2}/gi)||[]).map(decode);
+  const bad=found.filter(x=>!x||x.error).length;
+  const ok=found.filter(x=>x&&!x.error);const byP={};ok.forEach(r=>byP[r.persona]=r);
+  const list=PEOPLE.map(p=>byP[p.id]).filter(Boolean);
+  const missing=PEOPLE.filter(p=>!byP[p.id]).map(p=>p.n);
+  $('cmsg').textContent=(bad?bad+' código(s) no son válidos (revisen que se copiaron completos). ':'')+(missing.length?'Faltan: '+missing.join(', ')+'.':'');
+  if(list.length===4){$('results').hidden=true;$('reveal').hidden=false;reveal(list);window.scrollTo(0,0);}
+};
+function route(){const r=location.hash==='#resultados';$('results').hidden=!r;$('intro').hidden=r;if(r){$('play').hidden=true;$('done').hidden=true;}}
+window.addEventListener('hashchange',route);
+namesUI();route();
+
+function pct(ans){const s={};Object.keys(DIMS).forEach(k=>s[k]=0);ans.forEach((oi,qi)=>{if(!(oi>=0)||!Q[qi])return;Object.entries(Q[qi].o[oi][1]).forEach(([k,v])=>s[k]+=v);});
+  const p={};Object.keys(DIMS).forEach(k=>p[k]=MAX[k]?Math.round(s[k]/MAX[k]*100):0);return p;}
+
+// ── ¿respondió pensando? ──
+const words=s=>String(s).trim().split(/\s+/).length;
+// segundos que necesita un lector rápido (5 palabras por segundo) para leer la situación y las 4 alternativas
+const readSec=q=>(words(q.t)+q.o.reduce((a,o)=>a+words(o[0]),0))/5;
+function binomTail(n,k,p){let s=0;for(let x=k;x<=n;x++){let c=1;for(let j=0;j<x;j++)c=c*(n-j)/(j+1);s+=c*Math.pow(p,x)*Math.pow(1-p,n-x);}return s;}
+const pctTxt=v=>v<0.0001?'menos de 0,01%':(v*100).toFixed(v<0.01?2:1).replace('.',',')+'%';
+function integrity(r,ans){
+  const t=r.tiempos||[],ps=r.posiciones||[],n=Q.length;
+  if(!t.length)return{nivel:'na',titulo:'Sin datos de tiempo',txt:'Esta respuesta se guardó sin tiempos; no se puede evaluar cómo respondió.'};
+  const ok=Q.filter((q,qi)=>ans[qi]===q.best).length;
+  const timeouts=ans.filter(a=>a<0).length;
+  const fast=Q.filter((q,qi)=>ans[qi]>=0&&t[qi]>0&&t[qi]<readSec(q)*500).length;
+  const med=t.filter(x=>x>0).sort((a,b)=>a-b);const median=med.length?med[Math.floor(med.length/2)]/1000:0;
+  const cnt=[0,0,0,0];ps.forEach(x=>{if(x>=0&&x<4)cnt[x]++;});const top=Math.max(...cnt),letter='ABCD'[cnt.indexOf(top)];
+  const pRandom=binomTail(n,ok,0.25);
+  const base='Acertó '+ok+' de '+n+'. Tiempo típico por pregunta: '+median.toFixed(1).replace('.',',')+' s. Respuestas más rápidas que lo que toma leerlas: '+fast+' de '+n+'.';
+  if(top>=10)return{nivel:'mal',titulo:'Marcó casi siempre la misma letra ('+letter+', '+top+' de '+n+')',
+    txt:'Las alternativas se mezclan en cada pregunta, así que la respuesta correcta cae en una letra distinta cada vez. Elegir la '+letter+' '+top+' veces no sale de pensar cada situación: es marcar sin leer. '+base};
+  if(fast>=8&&ok>=11)return{nivel:'bien',titulo:'Rápido, pero sabía',
+    txt:'Respondió muy rápido, pero acertando. Si hubiera marcado al azar, acertar '+ok+' o más tendría una probabilidad de '+pctTxt(pRandom)+'. No fue azar: tenía claro el criterio. '+base};
+  if(fast>=8&&ok<=6)return{nivel:'mal',titulo:'Probable respuesta al azar',
+    txt:'Respondió más rápido de lo que toma leer y acertó cerca de lo que daría el azar (25%, unas 4 de 16). Lo más probable es que haya marcado sin pensar, y sus resultados no reflejan su criterio real. '+base};
+  if(fast>=8)return{nivel:'medio',titulo:'Muy rápido',
+    txt:'Respondió más rápido de lo que toma leer en la mitad o más de las preguntas. Acertó algo más que el azar, así que leyó a medias: sus errores pueden ser apuro y no criterio. '+base};
+  if(timeouts>=4)return{nivel:'medio',titulo:'Dejó pasar el tiempo en '+timeouts+' preguntas',
+    txt:'No decidir también cuenta como error. Puede ser distracción o que algunas situaciones le parecieron difíciles de resolver. '+base};
+  if(ok<=5)return{nivel:'medio',titulo:'Pensó, pero con otro criterio',
+    txt:'Se tomó el tiempo de leer, así que no fue azar, pero sus decisiones van en otra dirección que la del equipo. Vale la pena conversar cada error con calma. '+base};
+  return{nivel:'bien',titulo:'Respondió con atención',txt:'Leyó y decidió en tiempos normales. Sus resultados reflejan su criterio real. '+base};
+}
+
+function reveal(list){
+  const tf=$('teamfind');tf.replaceChildren();
+  const ans=list.map(r=>(Array.isArray(r.respuestas)?r.respuestas:[]).map(Number));
+  const add=(cls,title,txt)=>{const d=document.createElement('div');d.className='tf'+(cls?' '+cls:'');const b=document.createElement('b');b.textContent=title;const s=document.createElement('span');s.textContent=txt;d.append(b,s);tf.append(d);};
+  const allWrong=[],allRight=[];
+  Q.forEach((q,qi)=>{const wrong=ans.filter(a=>a[qi]!==q.best).length;if(wrong===4)allWrong.push(qi);else if(wrong===0)allRight.push(qi);});
+  const okCount=ans.map(a=>Q.filter((q,qi)=>a[qi]===q.best).length);
+  if(okCount.every(n=>n===Q.length))add('mid','Los 4 acertaron todo','Suena bien, pero este cuestionario no nos enseñó nada nuevo. La prueba real será decidir igual cuando haya plata y presión de verdad.');
+  allWrong.forEach(qi=>add('','Los 4 se equivocaron: '+Q[qi].from+' ('+Q[qi].d+')',Q[qi].why+' Es un punto ciego del equipo: nadie lo habría frenado.'));
+  if(!allWrong.length&&!okCount.every(n=>n===Q.length))add('good','No hay errores compartidos por los 4','En cada situación al menos uno eligió bien. Sirve solo si esa persona habla a tiempo.');
+  if(allRight.length&&allRight.length<Q.length)add('good','Los 4 acertaron en '+allRight.length+' de '+Q.length,allRight.map(qi=>Q[qi].from).join(' · '));
+  const avg={};Object.keys(DIMS).forEach(k=>avg[k]=Math.round(ans.reduce((s,a)=>s+pct(a)[k],0)/ans.length));
+  const weak=Object.entries(avg).sort((a,b)=>a[1]-b[1])[0];
+  add(weak[1]>=70?'good':'','Área más débil del equipo: '+DIMS[weak[0]]+' ('+weak[1]+'%)',weak[1]>=70?'Incluso el área más baja está sobre 70%.':'Aquí está el riesgo más probable de la empresa. Conviene escribir una regla del equipo para esto antes de lanzar.');
+  const integ=list.map((r,k)=>integrity(r,ans[k]));
+  const flagged=list.map((r,k)=>[PEOPLE.find(p=>p.id===r.persona).n,integ[k]]).filter(([,g])=>g.nivel==='mal'||g.nivel==='medio');
+  if(flagged.length)add('','Atención a cómo se respondió',flagged.map(([n,g])=>n+': '+g.titulo).join(' · ')+'. Revisen esos resultados con cuidado antes de sacar conclusiones.');
+  else add('good','Los 4 respondieron pensando','Nadie respondió al azar ni más rápido de lo que toma leer. Los resultados reflejan el criterio real del equipo.');
+  const res=$('res');res.replaceChildren();
+  list.forEach((r,k)=>{const per=PEOPLE.find(p=>p.id===r.persona);const p=pct(ans[k]);
+    const card=document.createElement('details');card.className='person';card.open=true;
+    const sum=document.createElement('summary');const h=document.createElement('h3');h.textContent=per.n+': '+okCount[k]+' de '+Q.length+' bien';
+    const sp=document.createElement('span');sp.textContent='Su área, '+DIMS[per.own]+': '+p[per.own]+'%';h.append(sp);sum.append(h);card.append(sum);
+    const dims=document.createElement('div');dims.className='dims';
+    Object.keys(DIMS).forEach(dk=>{const d=document.createElement('div');d.className='dim'+(dk===per.own?' own':'');
+      const n=document.createElement('span');n.textContent=DIMS[dk];const v=document.createElement('span');v.className='v';v.textContent=p[dk]+'%';
+      const b=document.createElement('span');b.className='b';const fill=document.createElement('i');fill.style.width=p[dk]+'%';fill.style.background=p[dk]>=70?'var(--good)':p[dk]>=45?'var(--system)':'var(--bad)';b.append(fill);d.append(n,v,b);dims.append(d);});
+    card.append(dims);
+    const g=integ[k];const gi=document.createElement('div');gi.className='tf'+(g.nivel==='bien'?' good':'')+(g.nivel==='medio'?' mid':'');
+    const gb=document.createElement('b');gb.textContent='Cómo respondió: '+g.titulo;const gs=document.createElement('span');gs.textContent=g.txt;gi.append(gb,gs);card.append(gi);
+    Q.forEach((q,qi)=>{const a=ans[k][qi];if(a===q.best)return;
+      const e=document.createElement('div');e.className='err';
+      const t=document.createElement('span');t.className='q';t.textContent=q.d+' · '+q.t;
+      const c=document.createElement('span');c.className='ch';c.textContent=(a>=0&&q.o[a])?per.n+' eligió: '+q.o[a][0]:per.n+' no respondió a tiempo.';
+      const co=document.createElement('span');co.className='cons';co.textContent=(a>=0&&q.o[a])?'Consecuencia: '+q.o[a][2]:'Consecuencia: no decidir también es decidir; el problema siguió creciendo.';
+      const ok=document.createElement('span');ok.className='ok';ok.textContent='Lo correcto: '+q.o[q.best][0]+' '+q.why;
+      e.append(t,c,co,ok);card.append(e);});
+    if(okCount[k]===Q.length){const e=document.createElement('p');e.className='chosen-note';e.textContent=per.n+' no cometió errores. Su aporte ahora es explicarle al resto cómo pensó cada decisión.';card.append(e);}
+    else{const e=document.createElement('p');e.className='chosen-note';e.textContent=(Q.length-okCount[k])+' debilidades detectadas a tiempo. Cada una es un punto concreto para mejorar, no una nota.';card.insertBefore(e,dims);}
+    res.append(card);});
+}
+
+})();
+</script>
+</body>
+</html>
